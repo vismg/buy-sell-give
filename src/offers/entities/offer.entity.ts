@@ -31,6 +31,4 @@ export class Offer {
 
   @Column({ default: false })
   hidden: boolean;
-
-  // Здесь будут дополнительные поля сущности Offer
 }

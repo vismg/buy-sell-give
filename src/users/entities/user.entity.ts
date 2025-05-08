@@ -44,6 +44,4 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
   wishlists: Wishlist[];
-
-  // Здесь будут дополнительные поля сущности User
 }
