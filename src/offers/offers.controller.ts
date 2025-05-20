@@ -3,21 +3,26 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
+  UseGuards,
+  Req,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
-import { UpdateOfferDto } from './dto/update-offer.dto';
-
+import { AuthGuard } from '@nestjs/passport';
+import { RequestWithUserPayload } from 'src/types/request.types';
 @Controller('offers')
+@UseGuards(AuthGuard('jwt'))
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
   @Post()
-  create(@Body() createOfferDto: CreateOfferDto) {
-    return this.offersService.create(createOfferDto);
+  create(
+    @Req() req: RequestWithUserPayload,
+    @Body() createOfferDto: CreateOfferDto,
+  ) {
+    return this.offersService.create(createOfferDto, req.user.id);
   }
 
   @Get()
@@ -26,17 +31,7 @@ export class OffersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.offersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOfferDto: UpdateOfferDto) {
-    return this.offersService.update(+id, updateOfferDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.offersService.remove(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.offersService.findOne(id);
   }
 }

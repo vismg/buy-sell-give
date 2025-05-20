@@ -20,7 +20,7 @@ export class Offer {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.offers)
+  @ManyToOne(() => User, (user) => user.offers, { eager: true })
   user: User;
 
   @ManyToOne(() => Wish, (wish) => wish.offers)

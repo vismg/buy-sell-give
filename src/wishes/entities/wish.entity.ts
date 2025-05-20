@@ -38,13 +38,13 @@ export class Wish {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   raised: number;
 
-  @ManyToOne(() => User, (user) => user.wishes)
+  @ManyToOne(() => User, (user) => user.wishes, { eager: true })
   owner: User;
 
   @Column({ length: 1024 })
   description: string;
 
-  @OneToMany(() => Offer, (offer) => offer.item)
+  @OneToMany(() => Offer, (offer) => offer.item, { eager: true })
   offers: Offer[];
 
   @Column({ default: 0 })

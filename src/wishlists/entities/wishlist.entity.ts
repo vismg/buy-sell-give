@@ -31,10 +31,10 @@ export class Wishlist {
   @Column()
   image: string;
 
-  @ManyToMany(() => Wish, (wish) => wish.wishlists)
+  @ManyToMany(() => Wish, (wish) => wish.wishlists, { eager: true })
   @JoinTable()
   items: Wish[];
 
-  @ManyToOne(() => User, (user) => user.wishlists)
+  @ManyToOne(() => User, (user) => user.wishlists, { eager: true })
   owner: User;
 }

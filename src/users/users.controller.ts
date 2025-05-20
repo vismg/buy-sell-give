@@ -5,38 +5,53 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RequestQuery, RequestWithUserPayload } from 'src/types/request.types';
+import { WishesService } from 'src/wishes/wishes.service';
 
 @Controller('users')
+@UseGuards(AuthGuard('jwt'))
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly wishesService: WishesService,
+  ) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Get('me')
+  getMe(@Req() req: RequestWithUserPayload) {
+    return this.usersService.findOneByUsername(req.user.username);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Patch('me')
+  updateMe(
+    @Req() req: RequestWithUserPayload,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(req.user.id, updateUserDto, req.user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @Get('me/wishes')
+  getMyWishes(@Req() req: RequestWithUserPayload) {
+    return this.wishesService.findAllByUsername(req.user.username);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Get(':username')
+  getUser(@Param('username') username: string) {
+    return this.usersService.findOneByUsername(username);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Get(':username/wishes')
+  getUserWishes(@Param('username') username: string) {
+    return this.wishesService.findAllByUsername(username);
+  }
+
+  @Post('find')
+  async findUser(@Body() query: RequestQuery) {
+    return this.usersService.findUserByQuery(query);
   }
 }

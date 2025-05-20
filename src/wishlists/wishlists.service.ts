@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 import { DataSource, Repository } from 'typeorm';
@@ -13,23 +13,48 @@ export class WishlistsService {
     private wishlistRepository: Repository<Wishlist>,
   ) {}
 
-  create(createWishlistDto: CreateWishlistDto) {
-    return this.wishlistRepository.save(createWishlistDto);
+  create(createWishlistDto: CreateWishlistDto, userId: number) {
+    const { itemsId, ...rest } = createWishlistDto;
+
+    const wishlist = this.wishlistRepository.create({
+      ...rest,
+      owner: { id: userId },
+      items: itemsId.map((id) => ({ id })),
+    });
+
+    return this.wishlistRepository.save(wishlist);
   }
 
-  findAll() {
+  async findAll() {
     return this.wishlistRepository.find();
   }
 
-  findOne(id: number) {
-    return this.wishlistRepository.findBy({ id });
+  async findOne(id: number) {
+    const wishlist = await this.wishlistRepository
+      .createQueryBuilder('wishlist')
+      .leftJoinAndSelect('wishlist.owner', 'owner')
+      .leftJoinAndSelect('wishlist.items', 'items')
+      .where('wishlist.id = :id', { id })
+      .getOne();
+
+    if (!wishlist) {
+      throw new NotFoundException();
+    }
+
+    return wishlist;
   }
 
-  async update(id: number, updateWishlistDto: UpdateWishlistDto) {
-    const wishlist = await this.wishlistRepository.findBy({ id });
+  async update(
+    id: number,
+    updateWishlistDto: UpdateWishlistDto,
+    userId: number,
+  ) {
+    const wishlist = await this.wishlistRepository.findOneBy({
+      id,
+      owner: { id: userId },
+    });
 
-    // todo: fix error pipeline
-    if (!wishlist) throw new Error();
+    if (!wishlist) throw new NotFoundException();
 
     const updatedWishlist = {
       ...wishlist,
@@ -39,11 +64,13 @@ export class WishlistsService {
     return this.wishlistRepository.save(updatedWishlist);
   }
 
-  async remove(id: number) {
-    const wishlist = await this.wishlistRepository.findBy({ id });
+  async remove(id: number, userId: number) {
+    const wishlist = await this.wishlistRepository.findOneBy({
+      id,
+      owner: { id: userId },
+    });
 
-    // todo: fix error pipeline
-    if (!wishlist) throw new Error();
+    if (!wishlist) throw new NotFoundException();
 
     return this.wishlistRepository.remove(wishlist);
   }
