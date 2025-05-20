@@ -38,7 +38,6 @@ export class AuthService {
   }
 
   async signup(signupDto: SignupDto) {
-    // todo: move to .env
     const saltRounds = 10;
     const { email, password, username, avatar, about } = signupDto;
 

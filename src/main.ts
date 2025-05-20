@@ -7,8 +7,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // Преобразует входящие данные в классы
-      whitelist: true, // Удаляет поля, не указанные в DTO
+      transform: true,
+      whitelist: true,
     }),
   );
   app.enableCors({
@@ -16,7 +16,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector))); // Преобразование ответов
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   await app.listen(process.env.PORT ?? 3000);
 }
 
