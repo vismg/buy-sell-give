@@ -1,15 +1,21 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload, UserPayload } from 'src/types/request.types';
-
+import { JwtPayload } from 'src/types/request.types';
+import { User } from 'src/users/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async validatePassword(username: string, password: string) {
@@ -31,14 +37,29 @@ export class AuthService {
     };
   }
 
-  async signin(user: UserPayload) {
+  async signin(user: User) {
     const payload: JwtPayload = { sub: user.id, username: user.username };
+    const accessToken = await this.jwtService.signAsync(payload);
+    const { id, username, email, avatar, about, createdAt, updatedAt } = user;
 
-    return { access_token: await this.jwtService.signAsync(payload) };
+    return {
+      id,
+      username,
+      email,
+      avatar,
+      about,
+      createdAt,
+      updatedAt,
+      access_token: accessToken,
+    };
   }
 
   async signup(signupDto: SignupDto) {
-    const saltRounds = 10;
+    const saltRounds = this.configService.get<number>('SALT_ROUNDS');
+
+    if (!saltRounds)
+      throw new InternalServerErrorException('SALT_ROUNDS is not set');
+
     const { email, password, username, avatar, about } = signupDto;
 
     const user = await this.usersService.findOneByEmailOrUsername({
